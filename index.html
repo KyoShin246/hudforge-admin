@@ -2,322 +2,582 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
-<title>HUD FORGE - Quản lý</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>HUD FORGE Quản lý</title>
 <style>
   :root{
-    --bg:#0f1117; --card:#171a23; --line:#262b38; --fg:#e8ebf2; --mut:#9aa3b5;
-    --cyan:#30d7c8; --purple:#8b7bff; --red:#ff5d6c; --green:#36d07a;
+    --bg:#0e1016; --card:#171a23; --card2:#1d2130; --line:#2a3042; --fg:#eef1f7; --mut:#98a2b6;
+    --acc:#2fd0bd; --acc2:#8b7bff; --ok:#3ad07f; --bad:#ff5d6c; --warn:#f0b35a;
+    --r:14px;
   }
   @media (prefers-color-scheme: light){
-    :root:not([data-theme="dark"]){ --bg:#f4f6fb; --card:#fff; --line:#e3e7f0; --fg:#1a1f2b; --mut:#5b6474; }
+    :root{ --bg:#f3f5fa; --card:#fff; --card2:#f6f7fb; --line:#dfe3ec; --fg:#161b26; --mut:#5c6678; --acc:#109c8c; --acc2:#6a58f0; }
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 "Segoe UI",system-ui,sans-serif;padding:16px}
-  .wrap{max-width:960px;margin:0 auto}
-  h1{font-size:20px;margin:4px 0 2px;background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{color:var(--mut);margin:0 0 16px;font-size:13px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
-  label{display:block;font-size:12px;color:var(--mut);margin:8px 0 4px}
-  input,button{font:inherit}
-  input[type=text],input[type=password]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
-  .row > div{flex:1;min-width:150px}
-  button{cursor:pointer;border:0;border-radius:8px;padding:9px 16px;font-weight:600;color:#fff;background:linear-gradient(90deg,var(--cyan),var(--purple))}
+  html,body{margin:0;background:var(--bg);color:var(--fg)}
+  body{font:16px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  .wrap{max-width:720px;margin:0 auto;padding:12px max(12px,env(safe-area-inset-left)) 96px max(12px,env(safe-area-inset-right))}
+  h1{font-size:19px;margin:6px 0 2px}
+  .brand{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+  .mut{color:var(--mut)} .small{font-size:13px} .ok{color:var(--ok)} .bad{color:var(--bad)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:10px 0}
+  label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+  input,select{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+  input:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
+  button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:12px 16px;cursor:pointer;min-height:46px;color:#06121a;background:var(--acc)}
+  button:focus-visible{outline:3px solid var(--acc2);outline-offset:2px}
   button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
-  button.sm{padding:5px 10px;font-size:13px}
-  .btn{font-size:.85rem;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-weight:600}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
-  th{color:var(--mut);font-weight:600}
-  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
-  .on{background:rgba(54,208,122,.15);color:var(--green)}
-  .off{background:rgba(255,93,108,.15);color:var(--red)}
-  .muted{color:var(--mut)} .ok{color:var(--green)} .err{color:var(--red)}
-  .warn{background:rgba(48,215,200,.08);border:1px solid var(--cyan);color:var(--fg);padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px}
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
-  code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:12px}
+  button.danger{background:var(--bad);color:#fff}
+  button.big{width:100%;font-size:18px;min-height:54px}
+  button.sm{min-height:38px;padding:8px 12px;font-size:14px}
+  button:disabled{opacity:.5}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .row>*{flex:1 1 140px;min-width:0}
+  .hint{background:var(--card2);border-left:4px solid var(--acc);border-radius:10px;padding:10px 12px;font-size:14px;margin:10px 0}
+  /* Tabs day duoi (de bam bang ngon cai) */
+  .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+  .tabs button{flex:1;border-radius:0;background:transparent;color:var(--mut);font-size:13px;min-height:58px;padding:6px 2px;position:relative}
+  .tabs button.on{color:var(--acc)}
+  .tabs .cnt{display:inline-block;min-width:20px;padding:0 6px;border-radius:99px;background:var(--bad);color:#fff;font-size:12px;margin-left:4px}
+  .top{display:flex;align-items:center;gap:10px;justify-content:space-between}
+  .search{margin:8px 0}
+  /* The don */
+  .order{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:10px 0}
+  .code{font:800 24px/1.1 ui-monospace,Consolas,monospace;letter-spacing:.5px;word-break:break-all}
+  .money{font-size:22px;font-weight:800;color:var(--ok)}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--mut);margin:6px 0 10px}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--card2);border:1px solid var(--line)}
+  .pill.on{color:var(--ok)} .pill.off{color:var(--bad)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:8px 0}
+  .kv b{font-weight:700}
+  .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .acts button{flex:1 1 calc(50% - 6px)}
+  .empty{text-align:center;color:var(--mut);padding:28px 10px}
+  .sect{font-size:14px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin:20px 2px 4px}
+  .hist{display:flex;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);font-size:14px}
+  .hist:last-child{border-bottom:0}
+  /* Hop thoai */
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:12px}
+  .dlg{background:var(--card);border:1px solid var(--line);border-radius:18px;width:100%;max-width:480px;padding:18px;margin-bottom:env(safe-area-inset-bottom)}
+  .dlg h3{margin:0 0 8px;font-size:18px}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:30;max-width:90vw;text-align:center}
+  [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>HUD FORGE &mdash; Quản lý</h1>
-  <p class="sub">Đăng nhập bằng <b>mật khẩu admin</b> (không cần dán khoá Supabase). Mọi thao tác đi qua máy chủ an toàn.</p>
 
-  <div class="warn">
-    Trang này chỉ cần <b>Project URL</b> và <b>mật khẩu admin</b> (mật khẩu bạn đặt lúc cài đặt máy chủ).
-    Đừng dán khoá bí mật Supabase vào đây — trình duyệt không cho phép.
-    Cần cài đặt chức năng <code>admin</code> trên máy chủ trước (xem hướng dẫn cài đặt).
-  </div>
+  <!-- ===== Man DANG NHAP / TAO ADMIN ===== -->
+  <section id="vAuth" hidden>
+    <h1><span class="brand">HUD FORGE</span> · Quản lý</h1>
+    <p class="mut small">Trang dành cho chủ shop. Đăng nhập một lần, máy này sẽ nhớ 30 ngày.</p>
 
-  <div class="card">
-    <div class="row">
-      <div>
-        <label>Địa chỉ máy chủ (Project URL)</label>
-        <input id="url" type="text" value="https://cbzeltlvpzpdupnuujaq.supabase.co" placeholder="https://xxxx.supabase.co">
-      </div>
-      <div>
-        <label>Mật khẩu admin</label>
-        <input id="pass" type="password" placeholder="Nhập mật khẩu admin">
-      </div>
-    </div>
-    <label style="margin-top:10px"><input type="checkbox" id="remember"> Nhớ địa chỉ máy chủ trên máy này (không lưu mật khẩu)</label>
-    <div style="margin-top:12px" class="row">
-      <button onclick="loadList()">Đăng nhập / Tải danh sách</button>
-      <button class="ghost" onclick="loadOrders()">Đơn chờ duyệt <span id="donBadge" class="pill off" style="display:none"></span></button>
-      <span id="conn" class="muted" style="align-self:center"></span>
-    </div>
-  </div>
-
-  <div class="toolbar">
-    <button class="btn" onclick="showTab('Ma')">Mã khách hàng</button>
-    <button class="btn" onclick="showTab('Don')">Đơn chờ duyệt</button>
-  </div>
-
-  <div id="tabMa">
-    <div class="card">
-      <b>Thêm mã thủ công</b> <span class="muted" style="font-size:12px">(dự phòng; khách thường tự tạo mã trong ứng dụng)</span>
-      <div class="row" style="margin-top:8px">
-        <div><label>Mã khách</label><input id="newkey" type="text" placeholder="HF-XXXX-XXXX"></div>
-        <div><label>Tên khách (Facebook / Zalo)</label><input id="newcontact" type="text" placeholder="Ví dụ: Anh Nam FB"></div>
-        <div><label>Ghi chú</label><input id="newnote" type="text" placeholder="Ví dụ: bán ngày 16/11"></div>
-      </div>
-      <div style="margin-top:10px" class="row">
-        <button onclick="genKey()" class="ghost sm">Sinh mã ngẫu nhiên</button>
-        <button onclick="addKey()">Thêm mã</button>
-        <span id="addmsg" style="align-self:center"></span>
-      </div>
+    <div class="card" id="boxLogin" hidden>
+      <h3 style="margin:0 0 4px">Đăng nhập</h3>
+      <label for="liUser">Tên đăng nhập</label>
+      <input id="liUser" autocomplete="username" autocapitalize="none" spellcheck="false">
+      <label for="liPass">Mật khẩu</label>
+      <input id="liPass" type="password" autocomplete="current-password">
+      <div style="margin-top:14px"><button class="big" id="btnLogin">Đăng nhập</button></div>
+      <p id="liMsg" class="small bad"></p>
     </div>
 
-    <div class="card">
-      <b>Tạo mã quà tặng</b> <span class="muted" style="font-size:12px">(khách nhập mã trong ứng dụng để được cộng tiền vào ví)</span>
-      <div class="row" style="margin-top:8px">
-        <div><label>Số tiền tặng (đồng)</label><input id="qtTien" type="text" placeholder="Ví dụ: 50000"></div>
-        <div><label>Mã quà (để trống = tự sinh)</label><input id="qtCode" type="text" placeholder="QUA-XXXXXXXX"></div>
-        <div><label>Ghi chú</label><input id="qtNote" type="text" placeholder="Ví dụ: tặng khách cũ"></div>
+    <div class="card" id="boxSetup" hidden>
+      <h3 style="margin:0 0 4px">Tạo tài khoản admin đầu tiên</h3>
+      <div class="hint">
+        Chưa có tài khoản admin nào. Hãy tự đặt <b>tên đăng nhập</b> và <b>mật khẩu</b> cho bạn.<br>
+        Để xác nhận đây là chủ shop, nhập thêm <b>mật khẩu khôi phục</b> (là <code>ADMIN_PASSWORD</code> đã đặt trên Supabase lúc cài đặt).
+        Tạo xong, từ lần sau chỉ cần tên + mật khẩu của bạn.
       </div>
-      <div style="margin-top:10px" class="row">
-        <button onclick="taoMaQua()">Tạo mã quà</button>
-        <span id="qtMsg" style="align-self:center"></span>
+      <label for="suUser">Tên đăng nhập (3–32 ký tự: chữ không dấu, số, . _ -)</label>
+      <input id="suUser" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="vd: tuan">
+      <label for="suPass">Mật khẩu (ít nhất 10 ký tự, nên từ 12)</label>
+      <input id="suPass" type="password" autocomplete="new-password">
+      <label for="suPass2">Nhập lại mật khẩu</label>
+      <input id="suPass2" type="password" autocomplete="new-password">
+      <label for="suAdmin">Mật khẩu khôi phục (ADMIN_PASSWORD)</label>
+      <input id="suAdmin" type="password" autocomplete="off">
+      <div style="margin-top:14px"><button class="big" id="btnSetup">Tạo tài khoản & đăng nhập</button></div>
+      <p id="suMsg" class="small bad"></p>
+    </div>
+
+    <details class="card small">
+      <summary class="mut">Địa chỉ máy chủ (chỉ đổi khi được hướng dẫn)</summary>
+      <label for="baseUrl">Project URL</label>
+      <input id="baseUrl" autocapitalize="none" spellcheck="false">
+      <div style="margin-top:8px"><button class="sm ghost" id="btnSaveBase">Lưu địa chỉ</button></div>
+    </details>
+  </section>
+
+  <!-- ===== Man CHINH ===== -->
+  <section id="vMain" hidden>
+    <div class="top">
+      <h1><span class="brand">HUD FORGE</span></h1>
+      <span class="small mut">Đăng nhập: <b id="meName"></b></span>
+    </div>
+
+    <!-- Tab DON CHO DUYET -->
+    <div id="tDon">
+      <div class="row search">
+        <input id="qDon" placeholder="Tìm theo mã khách (vd HF-AB12)" autocapitalize="characters" spellcheck="false">
+        <button class="ghost" id="btnReloadDon" style="flex:0 0 auto">Tải lại</button>
+      </div>
+      <div id="donList"><div class="empty">Đang tải…</div></div>
+      <div class="sect">Đã xử lý gần đây</div>
+      <div class="card" id="histList"><div class="empty">—</div></div>
+    </div>
+
+    <!-- Tab KHACH HANG -->
+    <div id="tKhach" hidden>
+      <div class="row search">
+        <input id="qKhach" placeholder="Tìm mã khách / tên Facebook" spellcheck="false">
+        <button class="ghost" id="btnReloadKhach" style="flex:0 0 auto">Tải lại</button>
+      </div>
+      <div id="khachList"><div class="empty">Đang tải…</div></div>
+      <div class="card">
+        <b>Thêm mã thủ công</b>
+        <p class="small mut">Dự phòng — khách thường tự tạo mã trong ứng dụng. Để trống mã = tự sinh.</p>
+        <label for="nkKey">Mã khách</label><input id="nkKey" placeholder="để trống = tự sinh" autocapitalize="characters" spellcheck="false">
+        <label for="nkContact">Tên khách (Facebook)</label><input id="nkContact">
+        <div style="margin-top:10px"><button id="btnAddKey">Thêm mã</button></div>
       </div>
     </div>
 
-    <div class="card">
-      <b>Cấu hình thanh toán</b> <span class="muted" style="font-size:12px">(hiện trên QR + màn thanh toán của khách)</span>
-      <div class="row" style="margin-top:8px">
-        <div><label>Ngân hàng (mã VietQR)</label><input id="cfBank" type="text" placeholder="TCB"></div>
-        <div><label>Số tài khoản</label><input id="cfStk" type="text" placeholder="19033848590017"></div>
+    <!-- Tab MA QUA -->
+    <div id="tQua" hidden>
+      <div class="card">
+        <b>Tạo mã quà tặng</b>
+        <p class="small mut">Khách nhập mã trong ứng dụng để được cộng tiền vào ví (dùng 1 lần).</p>
+        <label for="qtTien">Số tiền tặng (đồng)</label><input id="qtTien" inputmode="numeric" placeholder="vd 50000">
+        <label for="qtCode">Mã (để trống = tự sinh; tự đặt thì ≥10 ký tự)</label><input id="qtCode" autocapitalize="characters" spellcheck="false">
+        <label for="qtNote">Ghi chú</label><input id="qtNote" placeholder="vd tặng khách cũ">
+        <div style="margin-top:12px"><button class="big" id="btnGift">Tạo mã quà</button></div>
       </div>
-      <div class="row" style="margin-top:8px">
-        <div><label>Tên chủ TK (IN HOA)</label><input id="cfTen" type="text" placeholder="TRAN QUANG TUAN"></div>
-        <div><label>Kênh nhận bill</label><input id="cfLH" type="text" placeholder="Facebook: Tran Tuan"></div>
-      </div>
-      <div style="margin-top:10px" class="row">
-        <button onclick="saveConfig()">Lưu cấu hình</button>
-        <span id="cfMsg" style="align-self:center"></span>
-      </div>
+      <div class="sect">Mã quà gần đây</div>
+      <div class="card" id="giftList"><div class="empty">—</div></div>
     </div>
 
-    <div class="card">
-      <b>Danh sách mã khách</b>
-      <div id="list" style="margin-top:10px"><span class="muted">Chưa tải. Bấm "Đăng nhập / Tải danh sách" ở trên.</span></div>
+    <!-- Tab CAI DAT -->
+    <div id="tCai" hidden>
+      <div class="card">
+        <b>Thông tin thanh toán</b>
+        <p class="small mut">Hiện trên mã QR và màn thanh toán của khách. Đổi là có hiệu lực ngay.</p>
+        <label for="cfBank">Ngân hàng (mã VietQR, vd TCB)</label><input id="cfBank" autocapitalize="characters">
+        <label for="cfStk">Số tài khoản</label><input id="cfStk" inputmode="numeric">
+        <label for="cfTen">Tên chủ tài khoản (IN HOA không dấu)</label><input id="cfTen" autocapitalize="characters">
+        <label for="cfLH">Kênh nhận bill</label><input id="cfLH" placeholder="Facebook: Tran Tuan">
+        <div style="margin-top:12px"><button id="btnSaveCfg">Lưu thông tin thanh toán</button></div>
+      </div>
+      <div class="card">
+        <b>Đổi mật khẩu của bạn</b>
+        <p class="small mut">Đổi xong, các máy khác đang đăng nhập sẽ phải đăng nhập lại.</p>
+        <label for="cpOld">Mật khẩu hiện tại</label><input id="cpOld" type="password" autocomplete="current-password">
+        <label for="cpNew">Mật khẩu mới (ít nhất 10 ký tự)</label><input id="cpNew" type="password" autocomplete="new-password">
+        <label for="cpNew2">Nhập lại mật khẩu mới</label><input id="cpNew2" type="password" autocomplete="new-password">
+        <div style="margin-top:12px"><button id="btnChangePw">Đổi mật khẩu</button></div>
+      </div>
+      <div class="card">
+        <b>Tài khoản admin</b>
+        <div id="adminList" class="small mut" style="margin:6px 0">—</div>
+        <label for="naUser">Thêm admin: tên đăng nhập</label><input id="naUser" autocapitalize="none" spellcheck="false">
+        <label for="naPass">Mật khẩu (ít nhất 10 ký tự)</label><input id="naPass" type="password" autocomplete="new-password">
+        <div style="margin-top:12px"><button class="ghost" id="btnAddAdmin">Thêm admin</button></div>
+      </div>
+      <div class="card">
+        <button class="big danger" id="btnLogout">Đăng xuất khỏi máy này</button>
+      </div>
     </div>
-  </div>
-
-  <div id="tabDon" hidden>
-    <div class="card">
-      <b>Đơn chờ duyệt</b> <span class="muted" style="font-size:12px">(khách chuyển khoản xong, bạn kiểm tra tiền đã về rồi bấm Duyệt)</span>
-      <div id="orders" style="margin-top:10px"><span class="muted">Bấm "Đơn chờ duyệt" để tải.</span></div>
-    </div>
-  </div>
+  </section>
 </div>
 
+<nav class="tabs" id="tabs" hidden>
+  <button data-tab="tDon" class="on">Đơn chờ<span class="cnt" id="cntDon" hidden></span></button>
+  <button data-tab="tKhach">Khách hàng</button>
+  <button data-tab="tQua">Mã quà</button>
+  <button data-tab="tCai">Cài đặt</button>
+</nav>
+
 <script>
-const $ = id => document.getElementById(id);
-function base(){ return $('url').value.trim().replace(/\/+$/,''); }
-// Chống XSS: escape mọi giá trị từ máy chủ trước khi nối vào HTML
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+"use strict";
+const DEFAULT_BASE = "https://cbzeltlvpzpdupnuujaq.supabase.co";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const vnd = (n) => (Number(n) || 0).toLocaleString("vi-VN") + "đ";
 
-// Dịch mã lỗi của máy chủ sang tiếng Việt thân thiện (giữ mã gốc nếu chưa dịch)
-function dichLoi(d, status){
-  const map = {
-    bad_password: 'Sai mật khẩu admin',
-    bad_request: 'Yêu cầu không hợp lệ',
-    missing_key: 'Thiếu mã khách',
-    invalid_key: 'Không tìm thấy mã khách này',
-    bad_plan: 'Hạng phải là: luot, pro hoặc ultra',
-    bad_amount: 'Số tiền không hợp lệ',
-    bad_password_format: 'Mật khẩu phải 8–72 ký tự',
-    bad_key: 'Mã khách không đúng định dạng',
-    unknown_action: 'Thao tác không hợp lệ',
-    server_misconfig: 'Máy chủ chưa đặt mật khẩu admin (ADMIN_PASSWORD)',
-    weak_admin_password: 'Mật khẩu admin quá yếu: phải từ 20 ký tự. Đặt lại: supabase secrets set ADMIN_PASSWORD',
-    server_error: 'Lỗi máy chủ',
-    order_not_found: 'Không tìm thấy đơn',
-    bad_state: 'Đơn không ở trạng thái chờ duyệt',
-    goi_not_found: 'Không tìm thấy gói'
-  };
-  if(d && d.error === 'rate_limited') return 'Thử sai quá nhiều, vui lòng đợi ' + (d.retry_after||60) + ' giây rồi thử lại';
-  const code = d && (d.error || d.detail);
-  return (code && map[code]) || (code ? ('Lỗi: ' + code) : ('Lỗi máy chủ (' + status + ')'));
+// ---- Luu tru: CHI token + ten + dia chi (KHONG luu mat khau) ----
+const store = {
+  get(k){ try { return localStorage.getItem(k) || ""; } catch(e){ return ""; } },
+  set(k,v){ try { v ? localStorage.setItem(k,v) : localStorage.removeItem(k); } catch(e){} }
+};
+let TOKEN = store.get("hf_adm_tok");
+let BASE = store.get("hf_adm_base") || DEFAULT_BASE;
+
+function timeAgo(iso){
+  const t = Date.parse(iso); if (!t) return "";
+  const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+  if (s < 60) return "vừa xong";
+  const m = Math.round(s / 60); if (m < 60) return m + " phút trước";
+  const h = Math.round(m / 60); if (h < 24) return h + " giờ trước";
+  const d = Math.round(h / 24); return d + " ngày trước";
 }
 
-// CHỈ nhớ địa chỉ máy chủ, KHÔNG lưu mật khẩu (tránh bị đánh cắp)
-try{
-  const s = JSON.parse(localStorage.getItem('hf_admin_url')||'null');
-  if(s && s.url){ $('url').value=s.url; $('remember').checked=true; }
-}catch(e){}
-function persist(){
-  try{
-    if($('remember').checked) localStorage.setItem('hf_admin_url', JSON.stringify({url:$('url').value.trim()}));
-    else localStorage.removeItem('hf_admin_url');
-  }catch(e){}
-}
-
-function showTab(t){ $('tabMa').hidden=(t!=='Ma'); $('tabDon').hidden=(t!=='Don'); if(t==='Don') loadOrders(); }
-
-function genKey(){
-  const seg=n=>Array.from({length:n},()=>'ACDEFGHJKLMNPQRSTUVWXYZ2345679'[Math.floor(Math.random()*30)]).join('');
-  $('newkey').value='HF-'+seg(4)+'-'+seg(4);
-}
-
-// Gọi chức năng admin trên máy chủ
-async function callAdmin(action, params){
-  const r = await fetch(base()+'/functions/v1/admin', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(Object.assign({admin_password:$('pass').value, action}, params||{}))
-  });
-  const txt = await r.text();
-  let d=null; try{ d = txt?JSON.parse(txt):null; }catch(e){ d=txt; }
-  if(!r.ok) throw new Error(dichLoi(d, r.status));
-  return d;
-}
-
-async function loadList(){
-  persist();
-  $('conn').textContent='Đang tải...';
-  try{
-    const d = await callAdmin('list_licenses');
-    $('conn').innerHTML='<span class="ok">Đã đăng nhập (' + d.licenses.length + ' mã)</span>';
-    render(d.licenses); showTab('Ma'); loadConfig();
-  }catch(e){ $('conn').innerHTML='<span class="err">'+esc(e.message)+'</span>'; }
-}
-async function loadConfig(){
-  try{
-    const d=await callAdmin('get_config'); const c=d.config||{};
-    $('cfBank').value=c.bank_code||''; $('cfStk').value=c.so_tk||''; $('cfTen').value=c.ten_tk||''; $('cfLH').value=c.lien_he||'';
-  }catch(e){ /* khong chan dang nhap neu config loi */ }
-}
-async function saveConfig(){
-  try{
-    await callAdmin('set_config',{config:{bank_code:$('cfBank').value.trim(), so_tk:$('cfStk').value.trim(), ten_tk:$('cfTen').value.trim(), lien_he:$('cfLH').value.trim()}});
-    $('cfMsg').innerHTML='<span class="ok">Đã lưu</span>';
-  }catch(e){ $('cfMsg').innerHTML='<span class="err">'+esc(e.message)+'</span>'; }
-}
-
-function render(rows){
-  if(!rows.length){ $('list').innerHTML='<span class="muted">Chưa có mã nào.</span>'; return; }
-  let h='<table><thead><tr><th>Mã khách</th><th>Trạng thái</th><th>Hạng</th><th>Ví (đồng)</th><th>Vé</th><th>Máy</th><th>MK</th><th>Khách</th><th></th></tr></thead><tbody>';
-  for(const r of rows){
-    const k=String(r.key).replace(/['"\\]/g,'');
-    const dev=r.device_id?'<span class="muted" title="'+esc(r.device_id)+'">đã gắn</span>':'<span class="muted">chưa gắn</span>';
-    const st=r.active?'<span class="pill on">đang dùng</span>':'<span class="pill off">đã khoá</span>';
-    const hang=esc(r.plan||'luot');
-    const vi=(r.so_du_tien||0).toLocaleString('vi-VN');
-    const kh=(r.contact?esc(r.contact):'')+(r.note?(' <span class="muted">'+esc(r.note)+'</span>'):'');
-    h+='<tr><td><code>'+esc(r.key)+'</code></td><td>'+st+'</td>'
-      +'<td><button class="ghost sm" title="Đổi hạng" onclick="setPlan(\''+k+'\',\''+hang+'\')">'+hang+'</button></td>'
-      +'<td style="text-align:right"><button class="ghost sm" title="Nạp / trừ tiền" onclick="napTien(\''+k+'\','+(r.so_du_tien||0)+')">'+vi+'</button></td>'
-      +'<td style="text-align:right"><button class="ghost sm" title="Nạp / trừ vé đặc biệt" onclick="napVe(\''+k+'\','+(r.so_du_ve_db||0)+')">'+(r.so_du_ve_db||0)+'</button></td>'
-      +'<td>'+dev+'</td>'
-      +'<td>'+(r.co_mat_khau?'<span class="ok">có</span>':'<span class="muted">—</span>')+(r.so_lan_doi?(' <span class="muted" title="số lần đổi máy">đổi '+Number(r.so_lan_doi)+'</span>'):'')+'</td>'
-      +'<td>'+(kh||'')+'</td><td style="white-space:nowrap">'
-      +'<button class="ghost sm" onclick="setActive(\''+k+'\','+(!r.active)+')">'+(r.active?'Khoá':'Mở')+'</button> '
-      +(r.device_id?'<button class="ghost sm" onclick="unbind(\''+k+'\')">Gỡ máy</button> ':'')
-      +'<button class="ghost sm" title="Đặt / xoá mật khẩu khách" onclick="resetPass(\''+k+'\')">MK</button>'
-      +'</td></tr>';
+const LOI = {
+  bad_credentials: "Sai tên đăng nhập hoặc mật khẩu.",
+  bad_password: "Máy chủ chưa cập nhật bản mới (hoặc sai mật khẩu khôi phục). Nhờ deploy lại function admin.",
+  bad_admin_password: "Mật khẩu khôi phục (ADMIN_PASSWORD) không đúng.",
+  admin_exists: "Đã có tài khoản admin. Hãy đăng nhập.",
+  bad_username: "Tên đăng nhập 3–32 ký tự, chỉ gồm chữ không dấu, số và . _ -",
+  bad_password_format: "Mật khẩu phải từ 10 đến 72 ký tự.",
+  wrong_old_password: "Mật khẩu hiện tại không đúng.",
+  weak_admin_password: "ADMIN_PASSWORD trên máy chủ quá ngắn (cần ≥20 ký tự).",
+  bad_token: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+  need_login: "Vui lòng đăng nhập.",
+  invalid_key: "Không tìm thấy mã khách này.",
+  bad_key: "Mã khách không đúng định dạng.",
+  bad_plan: "Hạng phải là luot, pro hoặc ultra.",
+  bad_amount: "Số tiền không hợp lệ.",
+  bad_code: "Mã quà tự đặt phải 10–40 ký tự (chữ in hoa, số, -).",
+  order_not_found: "Không tìm thấy đơn.",
+  bad_state: "Đơn này không còn ở trạng thái chờ duyệt.",
+  goi_not_found: "Không tìm thấy gói.",
+  server_misconfig: "Máy chủ chưa cấu hình xong.",
+  server_error: "Lỗi máy chủ, thử lại sau."
+};
+function loiText(d, status){
+  if (d && d.error === "rate_limited") {
+    const s = Number(d.retry_after) || 60;
+    return "Thử sai quá nhiều. Đợi " + (s >= 120 ? Math.ceil(s/60) + " phút" : s + " giây") + " rồi thử lại.";
   }
-  h+='</tbody></table><p class="muted" style="margin-top:8px;font-size:12px">Bấm số ở cột <b>Ví</b> để nạp/trừ tiền (đồng); cột <b>Vé</b> để nạp vé theme đặc biệt; bấm <b>hạng</b> để đổi (luot / pro / ultra). <b>Gỡ máy</b> để khách đổi sang máy khác.</p>';
-  $('list').innerHTML=h;
+  const c = d && d.error;
+  return (c && LOI[c]) || (c ? "Lỗi: " + c : "Không kết nối được máy chủ (" + status + ").");
 }
 
-async function addKey(){
-  persist();
-  const key=$('newkey').value.trim(); if(!key){ $('addmsg').innerHTML='<span class="err">Hãy nhập mã khách</span>'; return; }
-  try{ await callAdmin('add_license',{key, contact:$('newcontact').value.trim(), note:$('newnote').value.trim()});
-    $('addmsg').innerHTML='<span class="ok">Đã thêm mã</span>'; $('newkey').value='';$('newcontact').value='';$('newnote').value=''; loadList();
-  }catch(e){ $('addmsg').innerHTML='<span class="err">'+esc(e.message)+'</span>'; }
-}
-async function setActive(key,active){ try{ await callAdmin('set_active',{key,active}); loadList(); }catch(e){ alert(e.message); } }
-async function unbind(key){ if(!confirm('Gỡ máy khỏi mã '+key+'? Khách sẽ nhập lại mã được trên máy mới.')) return; try{ await callAdmin('unbind',{key}); loadList(); }catch(e){ alert(e.message); } }
-async function resetPass(key){
-  var p=prompt('Đặt MẬT KHẨU MỚI cho mã '+key+' (8–72 ký tự).\nĐể TRỐNG rồi OK = XOÁ mật khẩu (khách đăng nhập lại bằng mã trên máy hiện tại).','');
-  if(p===null) return; p=p.trim();
-  if(p && (p.length<8||p.length>72)){ alert('Mật khẩu phải 8–72 ký tự'); return; }
-  try{ await callAdmin('reset_password',{key, password:p}); alert(p?'Đã đặt mật khẩu mới':'Đã xoá mật khẩu'); loadList(); }catch(e){ alert(e.message); }
-}
-async function setPlan(key,cur){
-  var p=prompt('Chọn hạng cho mã này:\n  luot  = trả tiền theo giá từng theme\n  pro   = theme thường miễn phí + vé theme đặc biệt\n  ultra = mở tất cả theme', cur);
-  if(p===null) return; p=p.trim().toLowerCase();
-  if(['luot','pro','ultra'].indexOf(p)<0){ alert('Hạng phải là: luot, pro hoặc ultra'); return; }
-  try{ await callAdmin('set_plan',{key,plan:p});
-    if(p==='pro' && confirm('Hạng Pro: tặng luôn 5 vé theme đặc biệt cho mã này?')){ await callAdmin('add_ve',{key,delta:5}); }
-    loadList();
-  }catch(e){ alert(e.message); }
-}
-async function napTien(key,cur){
-  var s=prompt('Nạp hoặc trừ TIỀN (đồng). Nhập số âm để trừ.\nSố dư hiện tại: '+cur.toLocaleString('vi-VN')+' đồng', '70000');
-  if(s===null) return; var delta=parseInt(s,10); if(isNaN(delta)||delta===0) return;
-  try{ await callAdmin('add_tien',{key,delta}); loadList(); }catch(e){ alert(e.message); }
-}
-async function napVe(key,cur){
-  var s=prompt('Nạp hoặc trừ VÉ theme đặc biệt. Nhập số âm để trừ.\nHiện có: '+cur+' vé', '5');
-  if(s===null) return; var delta=parseInt(s,10); if(isNaN(delta)||delta===0) return;
-  try{ await callAdmin('add_ve',{key,delta}); loadList(); }catch(e){ alert(e.message); }
-}
-async function taoMaQua(){
-  persist();
-  const tien=parseInt(($('qtTien').value||'').replace(/[^0-9]/g,''),10);
-  if(!tien||tien<=0){ $('qtMsg').innerHTML='<span class="err">Hãy nhập số tiền</span>'; return; }
-  try{ const d=await callAdmin('create_gift',{so_tien:tien, code:$('qtCode').value.trim(), ghi_chu:$('qtNote').value.trim()});
-    $('qtMsg').innerHTML='<span class="ok">Đã tạo mã: <code>'+esc(d.code)+'</code> (' + Number(d.so_tien).toLocaleString('vi-VN') + ' đồng)</span>';
-    $('qtCode').value='';$('qtTien').value='';$('qtNote').value='';
-  }catch(e){ $('qtMsg').innerHTML='<span class="err">'+esc(e.message)+'</span>'; }
+async function api(action, params){
+  const body = Object.assign({ action }, params || {});
+  const PUBLIC = ["setup_status", "setup_admin", "admin_login"];
+  if (PUBLIC.includes(action)) delete body.token; else if (TOKEN) body.token = TOKEN;
+  let r, d = null;
+  try {
+    r = await fetch(BASE.replace(/\/+$/,"") + "/functions/v1/admin", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+    });
+  } catch (e) { throw new Error("Không kết nối được máy chủ. Kiểm tra mạng."); }
+  try { d = await r.json(); } catch (e) {}
+  if (!r.ok || (d && d.error)) {
+    if (d && (d.error === "bad_token" || d.error === "need_login")) { logout(true); }
+    throw new Error(loiText(d, r.status));
+  }
+  return d || {};
 }
 
+// ---- Thong bao + hop thoai trong trang (than thien dien thoai) ----
+let toastT;
+function toast(msg){
+  let el = document.querySelector(".toast");
+  if (!el) { el = document.createElement("div"); el.className = "toast"; document.body.appendChild(el); }
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 2600);
+}
+function dialog({ title, msg, input, inputType, placeholder, okText, danger }){
+  return new Promise((resolve) => {
+    const m = document.createElement("div"); m.className = "mask";
+    m.innerHTML = '<div class="dlg" role="dialog" aria-modal="true">'
+      + '<h3>' + esc(title || "") + '</h3>'
+      + (msg ? '<p class="mut" style="margin:0 0 8px;white-space:pre-line">' + esc(msg) + '</p>' : '')
+      + (input ? '<input id="dlgIn" ' + (inputType === "num" ? 'inputmode="numeric"' : '') + ' placeholder="' + esc(placeholder || "") + '">' : '')
+      + '<div class="row" style="margin-top:14px">'
+      + '<button class="ghost" data-x="0">Huỷ</button>'
+      + '<button class="' + (danger ? 'danger' : '') + '" data-x="1">' + esc(okText || "Đồng ý") + '</button></div></div>';
+    document.body.appendChild(m);
+    const inp = m.querySelector("#dlgIn"); if (inp) inp.focus();
+    const done = (ok) => { const v = inp ? inp.value.trim() : true; m.remove(); resolve(ok ? v : null); };
+    m.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-x]"); if (b) done(b.dataset.x === "1");
+      else if (e.target === m) done(false);
+    });
+    if (inp) inp.addEventListener("keydown", (e) => { if (e.key === "Enter") done(true); });
+  });
+}
+async function copyText(t){
+  try { await navigator.clipboard.writeText(t); toast("Đã sao chép " + t); }
+  catch (e) {
+    const i = document.createElement("input"); i.value = t; document.body.appendChild(i); i.select();
+    try { document.execCommand("copy"); toast("Đã sao chép " + t); } catch (e2) { toast("Không sao chép được"); }
+    i.remove();
+  }
+}
+function busy(btn, on){ if (btn) btn.disabled = on; }
+
+// ===================== DANG NHAP =====================
+async function showAuth(){
+  $("vMain").hidden = true; $("tabs").hidden = true; $("vAuth").hidden = false;
+  $("baseUrl").value = BASE;
+  $("boxLogin").hidden = true; $("boxSetup").hidden = true;
+  try {
+    const d = await api("setup_status");
+    if (d.need_setup) $("boxSetup").hidden = false; else { $("boxLogin").hidden = false; $("liUser").focus(); }
+  } catch (e) {
+    $("boxLogin").hidden = false; $("liMsg").textContent = e.message;
+  }
+}
+function logout(silent){
+  TOKEN = ""; store.set("hf_adm_tok", ""); store.set("hf_adm_user", "");
+  if (!silent) toast("Đã đăng xuất");
+  showAuth();
+}
+async function afterLogin(d){
+  TOKEN = d.token; store.set("hf_adm_tok", d.token); store.set("hf_adm_user", d.username || "");
+  $("liPass").value = ""; $("suPass").value = ""; $("suPass2").value = ""; $("suAdmin").value = "";
+  showMain();
+}
+$("btnLogin").addEventListener("click", async () => {
+  const b = $("btnLogin"); $("liMsg").textContent = "";
+  const u = $("liUser").value.trim(), p = $("liPass").value;
+  if (!u || !p) { $("liMsg").textContent = "Hãy nhập tên đăng nhập và mật khẩu."; return; }
+  busy(b, true);
+  try { const d = await api("admin_login", { username: u, password: p, token: undefined }); await afterLogin(d); }
+  catch (e) { $("liMsg").textContent = e.message; }
+  finally { busy(b, false); }
+});
+$("liPass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnLogin").click(); });
+$("btnSetup").addEventListener("click", async () => {
+  const b = $("btnSetup"); const m = $("suMsg"); m.textContent = "";
+  const u = $("suUser").value.trim().toLowerCase(), p = $("suPass").value, p2 = $("suPass2").value, a = $("suAdmin").value;
+  if (!/^[a-z0-9._-]{3,32}$/.test(u)) { m.textContent = LOI.bad_username; return; }
+  if (p.length < 10) { m.textContent = "Mật khẩu phải từ 10 ký tự (nên từ 12)."; return; }
+  if (p !== p2) { m.textContent = "Hai lần nhập mật khẩu không khớp."; return; }
+  if (!a) { m.textContent = "Hãy nhập mật khẩu khôi phục (ADMIN_PASSWORD)."; return; }
+  busy(b, true);
+  try { const d = await api("setup_admin", { username: u, password: p, admin_password: a, token: undefined }); toast("Đã tạo tài khoản admin"); await afterLogin(d); }
+  catch (e) { m.textContent = e.message; }
+  finally { busy(b, false); }
+});
+$("btnSaveBase").addEventListener("click", () => {
+  const v = $("baseUrl").value.trim().replace(/\/+$/,"");
+  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(v)) { toast("Địa chỉ phải dạng https://xxxx.supabase.co"); return; }
+  BASE = v; store.set("hf_adm_base", v === DEFAULT_BASE ? "" : v); toast("Đã lưu địa chỉ"); showAuth();
+});
+
+// ===================== MAN CHINH =====================
+let ORDERS = [], LICS = [];
+function showMain(){
+  $("vAuth").hidden = true; $("vMain").hidden = false; $("tabs").hidden = false;
+  $("meName").textContent = store.get("hf_adm_user") || "admin";
+  openTab("tDon");
+}
+function openTab(id){
+  for (const t of ["tDon","tKhach","tQua","tCai"]) $(t).hidden = (t !== id);
+  for (const b of document.querySelectorAll(".tabs button")) b.classList.toggle("on", b.dataset.tab === id);
+  window.scrollTo(0, 0);
+  if (id === "tDon") loadOrders();
+  if (id === "tKhach") loadLics();
+  if (id === "tQua") loadGifts();
+  if (id === "tCai") loadSettings();
+}
+$("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-tab]"); if (b) openTab(b.dataset.tab); });
+
+// ---- DON CHO DUYET ----
 async function loadOrders(){
-  persist(); showTab('Don');
-  $('orders').innerHTML='<span class="muted">Đang tải...</span>';
-  try{
-    const d=await callAdmin('list_orders'); const rows=d.orders||[];
-    const b=$('donBadge'); if(rows.length){ b.textContent=rows.length; b.style.display=''; } else b.style.display='none';
-    if(!rows.length){ $('orders').innerHTML='<span class="muted">Không có đơn nào chờ duyệt.</span>'; return; }
-    let h='<table><thead><tr><th>Mã đơn (nội dung CK)</th><th>Gói</th><th>Số tiền</th><th>Khách</th><th>Lúc</th><th></th></tr></thead><tbody>';
-    for(const r of rows){
-      const id=String(r.id).replace(/['"\\]/g,'');
-      const tien=(r.so_tien||0).toLocaleString('vi-VN')+' đ';
-      const goiTen=esc((r.goi&&r.goi.ten)||r.goi_id);
-      const kh=esc((r.licenses&&r.licenses.contact)||r.license_key);
-      const t=esc((r.created_at||'').slice(0,16).replace('T',' '));
-      h+='<tr><td><code>'+esc(r.id)+'</code></td><td>'+goiTen+'</td><td style="text-align:right">'+tien+'</td>'
-        +'<td>'+kh+'</td><td class="muted">'+t+'</td>'
-        +'<td style="white-space:nowrap"><button class="sm" onclick="approveOrder(\''+id+'\')">Duyệt</button> '
-        +'<button class="ghost sm" onclick="cancelOrder(\''+id+'\')">Huỷ</button></td></tr>';
+  try {
+    const d = await api("list_orders"); ORDERS = d.orders || [];
+    const c = $("cntDon"); c.hidden = !ORDERS.length; c.textContent = ORDERS.length;
+    renderOrders();
+  } catch (e) { $("donList").innerHTML = '<div class="empty bad">' + esc(e.message) + '</div>'; }
+  loadHistory();
+}
+function renderOrders(){
+  const q = $("qDon").value.trim().toUpperCase();
+  const list = q ? ORDERS.filter((o) => String(o.license_key).toUpperCase().includes(q)) : ORDERS;
+  if (!list.length) { $("donList").innerHTML = '<div class="empty">' + (q ? "Không có đơn khớp mã này." : "Không có đơn nào chờ duyệt. 🎉") + '</div>'; return; }
+  $("donList").innerHTML = list.map((o) => {
+    const goi = (o.goi && o.goi.ten) || o.goi_id;
+    const kh = (o.licenses && o.licenses.contact) || "";
+    return '<div class="order">'
+      + '<div class="small mut">Nội dung chuyển khoản (mã khách)</div>'
+      + '<div class="row" style="align-items:center"><div class="code">' + esc(o.license_key) + '</div>'
+      + '<button class="sm ghost" style="flex:0 0 auto" data-act="copy" data-v="' + esc(o.license_key) + '">Sao chép</button></div>'
+      + '<div class="money" style="margin-top:6px">' + vnd(o.so_tien) + '</div>'
+      + '<div class="meta"><span>Gói: <b>' + esc(goi) + '</b></span><span>' + esc(timeAgo(o.created_at)) + '</span>'
+      + (kh ? '<span>Khách: ' + esc(kh) + '</span>' : '') + '<span class="small">#' + esc(o.id) + '</span></div>'
+      + '<div class="row"><button class="ghost" style="flex:0 0 30%" data-act="cancel" data-id="' + esc(o.id) + '">Huỷ</button>'
+      + '<button style="flex:1" data-act="approve" data-id="' + esc(o.id) + '" data-k="' + esc(o.license_key) + '" data-t="' + esc(o.so_tien) + '">Duyệt ✓</button></div>'
+      + '</div>';
+  }).join("");
+}
+$("qDon").addEventListener("input", renderOrders);
+$("btnReloadDon").addEventListener("click", loadOrders);
+$("donList").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  if (b.dataset.act === "copy") return copyText(b.dataset.v);
+  if (b.dataset.act === "approve") {
+    const ok = await dialog({ title: "Duyệt đơn?", msg: "Đã kiểm tra trong app ngân hàng: nhận đủ " + vnd(b.dataset.t) + " với nội dung " + b.dataset.k + "?\nDuyệt xong khách được cộng tiền / mở gói ngay.", okText: "Đã nhận tiền – Duyệt" });
+    if (ok === null) return;
+    busy(b, true);
+    try { await api("approve_order", { order_id: b.dataset.id }); toast("Đã duyệt"); loadOrders(); }
+    catch (err) { toast(err.message); busy(b, false); }
+  }
+  if (b.dataset.act === "cancel") {
+    const ok = await dialog({ title: "Huỷ đơn này?", msg: "Chỉ huỷ khi khách không chuyển khoản.", okText: "Huỷ đơn", danger: true });
+    if (ok === null) return;
+    try { await api("cancel_order", { order_id: b.dataset.id }); toast("Đã huỷ đơn"); loadOrders(); }
+    catch (err) { toast(err.message); }
+  }
+});
+async function loadHistory(){
+  try {
+    const d = await api("recent_orders"); const rows = d.orders || [];
+    $("histList").innerHTML = rows.length ? rows.map((o) =>
+      '<div class="hist"><div><div style="font-family:ui-monospace,Consolas,monospace;font-weight:700">' + esc(o.license_key) + '</div>'
+      + '<div class="small mut">' + esc((o.goi && o.goi.ten) || o.goi_id) + ' · ' + esc(timeAgo(o.duyet_at || o.created_at)) + '</div></div>'
+      + '<div style="text-align:right"><div><b>' + vnd(o.so_tien) + '</b></div>'
+      + '<div class="small ' + (o.trang_thai === "da_duyet" ? "ok" : "bad") + '">' + (o.trang_thai === "da_duyet" ? "Đã duyệt" : "Đã huỷ") + '</div></div></div>'
+    ).join("") : '<div class="empty">Chưa có.</div>';
+  } catch (e) { $("histList").innerHTML = '<div class="empty bad">' + esc(e.message) + '</div>'; }
+}
+
+// ---- KHACH HANG ----
+async function loadLics(){
+  try { const d = await api("list_licenses"); LICS = d.licenses || []; renderLics(); }
+  catch (e) { $("khachList").innerHTML = '<div class="empty bad">' + esc(e.message) + '</div>'; }
+}
+function renderLics(){
+  const q = $("qKhach").value.trim().toUpperCase();
+  let list = q ? LICS.filter((r) => String(r.key).toUpperCase().includes(q) || String(r.contact || "").toUpperCase().includes(q)) : LICS;
+  const total = list.length; list = list.slice(0, 60);
+  if (!list.length) { $("khachList").innerHTML = '<div class="empty">' + (q ? "Không tìm thấy." : "Chưa có khách.") + '</div>'; return; }
+  $("khachList").innerHTML = (total > 60 ? '<p class="small mut">Hiện 60/' + total + ' — gõ để tìm thêm.</p>' : '') + list.map((r) => {
+    const k = esc(r.key);
+    return '<div class="order">'
+      + '<div class="row" style="align-items:center"><div class="code" style="font-size:19px">' + k + '</div>'
+      + '<span class="pill ' + (r.active ? "on" : "off") + '" style="flex:0 0 auto">' + (r.active ? "đang dùng" : "đã khoá") + '</span></div>'
+      + (r.contact ? '<div class="mut small">' + esc(r.contact) + '</div>' : '')
+      + '<div class="kv"><span class="mut">Ví</span><b>' + vnd(r.so_du_tien) + '</b>'
+      + '<span class="mut">Lượt miễn phí</span><b>' + esc(r.luot_mien_phi == null ? "—" : r.luot_mien_phi) + '</b>'
+      + '<span class="mut">Vé đặc biệt</span><b>' + esc(r.so_du_ve_db || 0) + '</b>'
+      + '<span class="mut">Hạng</span><b>' + esc(r.plan || "luot") + '</b>'
+      + '<span class="mut">Máy</span><span>' + (r.device_id ? "đã gắn" : "chưa gắn") + (r.so_lan_doi ? " · đổi " + esc(r.so_lan_doi) + " lần" : "") + '</span>'
+      + '<span class="mut">Mật khẩu</span><span>' + (r.co_mat_khau ? "có" : "chưa đặt") + '</span></div>'
+      + '<div class="acts">'
+      + '<button class="sm" data-act="tien" data-k="' + k + '">Nạp / trừ tiền</button>'
+      + '<button class="sm ghost" data-act="plan" data-k="' + k + '" data-v="' + esc(r.plan || "luot") + '">Đổi hạng</button>'
+      + '<button class="sm ghost" data-act="ve" data-k="' + k + '">Vé đặc biệt</button>'
+      + '<button class="sm ghost" data-act="pw" data-k="' + k + '">Mật khẩu</button>'
+      + (r.device_id ? '<button class="sm ghost" data-act="unbind" data-k="' + k + '">Gỡ máy</button>' : '')
+      + '<button class="sm ' + (r.active ? "danger" : "ghost") + '" data-act="active" data-k="' + k + '" data-v="' + (r.active ? "0" : "1") + '">' + (r.active ? "Khoá mã" : "Mở khoá") + '</button>'
+      + '</div></div>';
+  }).join("");
+}
+$("qKhach").addEventListener("input", renderLics);
+$("btnReloadKhach").addEventListener("click", loadLics);
+$("khachList").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const key = b.dataset.k;
+  try {
+    if (b.dataset.act === "tien") {
+      const v = await dialog({ title: "Nạp / trừ tiền · " + key, msg: "Nhập số tiền (đồng). Số âm để trừ, vd -5000.", input: true, inputType: "num", placeholder: "70000", okText: "Lưu" });
+      if (v === null || v === "") return; const delta = parseInt(v.replace(/[^\d-]/g, ""), 10); if (!delta) return toast("Số tiền không hợp lệ");
+      const d = await api("add_tien", { key, delta }); toast("Ví mới: " + vnd(d.so_du)); loadLics();
+    } else if (b.dataset.act === "ve") {
+      const v = await dialog({ title: "Vé đặc biệt · " + key, msg: "Nhập số vé cộng thêm (số âm để trừ).", input: true, inputType: "num", placeholder: "5", okText: "Lưu" });
+      if (v === null || v === "") return; const delta = parseInt(v.replace(/[^\d-]/g, ""), 10); if (!delta) return;
+      await api("add_ve", { key, delta }); toast("Đã cập nhật vé"); loadLics();
+    } else if (b.dataset.act === "plan") {
+      const v = await dialog({ title: "Đổi hạng · " + key, msg: "Gõ một trong: luot (trả theo theme) · pro (thường miễn phí + vé đặc biệt) · ultra (mở tất cả)", input: true, placeholder: b.dataset.v, okText: "Lưu" });
+      if (v === null || v === "") return; const plan = v.toLowerCase();
+      if (!["luot","pro","ultra"].includes(plan)) return toast(LOI.bad_plan);
+      await api("set_plan", { key, plan });
+      if (plan === "pro") { const g = await dialog({ title: "Tặng 5 vé đặc biệt?", msg: "Gói Pro thường kèm 5 vé theme đặc biệt.", okText: "Tặng 5 vé" }); if (g !== null) await api("add_ve", { key, delta: 5 }); }
+      toast("Đã đổi hạng"); loadLics();
+    } else if (b.dataset.act === "pw") {
+      const v = await dialog({ title: "Mật khẩu khách · " + key, msg: "Nhập mật khẩu mới (8–72 ký tự) rồi báo khách.\nĐể TRỐNG và bấm Lưu = xoá mật khẩu (khách vào lại bằng mã trên máy đang gắn).", input: true, okText: "Lưu" });
+      if (v === null) return; if (v && (v.length < 8 || v.length > 72)) return toast("Mật khẩu khách phải 8–72 ký tự");
+      await api("reset_password", { key, password: v }); toast(v ? "Đã đặt mật khẩu mới" : "Đã xoá mật khẩu"); loadLics();
+    } else if (b.dataset.act === "unbind") {
+      if (await dialog({ title: "Gỡ máy khỏi " + key + "?", msg: "Khách sẽ kích hoạt lại được trên máy mới.", okText: "Gỡ máy" }) === null) return;
+      await api("unbind", { key }); toast("Đã gỡ máy"); loadLics();
+    } else if (b.dataset.act === "active") {
+      const on = b.dataset.v === "1";
+      if (!on && await dialog({ title: "Khoá mã " + key + "?", msg: "Khách sẽ không tải được theme cho tới khi mở lại.", okText: "Khoá mã", danger: true }) === null) return;
+      await api("set_active", { key, active: on }); toast(on ? "Đã mở khoá" : "Đã khoá mã"); loadLics();
     }
-    h+='</tbody></table>';
-    $('orders').innerHTML=h;
-  }catch(e){ $('orders').innerHTML='<span class="err">'+esc(e.message)+'</span>'; }
+  } catch (err) { toast(err.message); }
+});
+$("btnAddKey").addEventListener("click", async () => {
+  const b = $("btnAddKey"); busy(b, true);
+  try { const d = await api("add_license", { key: $("nkKey").value.trim().toUpperCase(), contact: $("nkContact").value.trim() });
+    toast("Đã thêm mã " + d.key); $("nkKey").value = ""; $("nkContact").value = ""; loadLics(); }
+  catch (e) { toast(e.message); } finally { busy(b, false); }
+});
+
+// ---- MA QUA ----
+async function loadGifts(){
+  try {
+    const d = await api("list_gifts"); const rows = d.gifts || [];
+    $("giftList").innerHTML = rows.length ? rows.map((g) =>
+      '<div class="hist"><div><div style="font-family:ui-monospace,Consolas,monospace;font-weight:700">' + esc(g.code) + '</div>'
+      + '<div class="small mut">' + esc(g.ghi_chu || "") + (g.da_dung_boi ? ' · dùng bởi ' + esc(g.da_dung_boi) : '') + '</div></div>'
+      + '<div style="text-align:right"><b>' + vnd(g.so_tien) + '</b><div class="small ' + (g.da_dung_boi ? "mut" : "ok") + '">' + (g.da_dung_boi ? "đã dùng" : "chưa dùng") + '</div>'
+      + (g.da_dung_boi ? '' : '<button class="sm ghost" data-act="copy" data-v="' + esc(g.code) + '" style="margin-top:4px">Sao chép</button>') + '</div></div>'
+    ).join("") : '<div class="empty">Chưa có mã quà.</div>';
+  } catch (e) { $("giftList").innerHTML = '<div class="empty bad">' + esc(e.message) + '</div>'; }
 }
-async function approveOrder(id){
-  if(!confirm('Duyệt đơn '+id+'?\nChỉ bấm khi bạn đã nhận đủ tiền chuyển khoản. Khách sẽ được cộng tiền / mở gói ngay.')) return;
-  try{ await callAdmin('approve_order',{order_id:id}); loadOrders(); }catch(e){ alert(e.message); }
+$("giftList").addEventListener("click", (e) => { const b = e.target.closest("[data-act=copy]"); if (b) copyText(b.dataset.v); });
+$("btnGift").addEventListener("click", async () => {
+  const b = $("btnGift");
+  const tien = parseInt(($("qtTien").value || "").replace(/\D/g, ""), 10);
+  if (!tien) return toast("Hãy nhập số tiền");
+  busy(b, true);
+  try {
+    const d = await api("create_gift", { so_tien: tien, code: $("qtCode").value.trim().toUpperCase(), ghi_chu: $("qtNote").value.trim() });
+    $("qtTien").value = ""; $("qtCode").value = ""; $("qtNote").value = "";
+    await dialog({ title: "Đã tạo mã quà", msg: d.code + "\n" + vnd(d.so_tien) + "\nGửi mã này cho khách.", okText: "Sao chép mã" }).then((ok) => { if (ok !== null) copyText(d.code); });
+    loadGifts();
+  } catch (e) { toast(e.message); } finally { busy(b, false); }
+});
+
+// ---- CAI DAT ----
+async function loadSettings(){
+  try { const d = await api("get_config"); const c = d.config || {};
+    $("cfBank").value = c.bank_code || ""; $("cfStk").value = c.so_tk || ""; $("cfTen").value = c.ten_tk || ""; $("cfLH").value = c.lien_he || ""; }
+  catch (e) { toast(e.message); }
+  try { const d = await api("list_admins");
+    $("adminList").textContent = "Admin hiện có: " + (d.admins || []).map((a) => a.username + (a.username === d.me ? " (bạn)" : "")).join(", "); }
+  catch (e) {}
 }
-async function cancelOrder(id){
-  if(!confirm('Huỷ đơn '+id+'?')) return;
-  try{ await callAdmin('cancel_order',{order_id:id}); loadOrders(); }catch(e){ alert(e.message); }
-}
+$("btnSaveCfg").addEventListener("click", async () => {
+  try { await api("set_config", { config: { bank_code: $("cfBank").value.trim().toUpperCase(), so_tk: $("cfStk").value.trim(), ten_tk: $("cfTen").value.trim().toUpperCase(), lien_he: $("cfLH").value.trim() } });
+    toast("Đã lưu thông tin thanh toán"); }
+  catch (e) { toast(e.message); }
+});
+$("btnChangePw").addEventListener("click", async () => {
+  const o = $("cpOld").value, n = $("cpNew").value, n2 = $("cpNew2").value;
+  if (n.length < 10) return toast("Mật khẩu mới phải từ 10 ký tự");
+  if (n !== n2) return toast("Hai lần nhập mật khẩu mới không khớp");
+  try { const d = await api("change_password", { old_password: o, new_password: n });
+    TOKEN = d.token; store.set("hf_adm_tok", d.token);
+    $("cpOld").value = ""; $("cpNew").value = ""; $("cpNew2").value = ""; toast("Đã đổi mật khẩu"); }
+  catch (e) { toast(e.message); }
+});
+$("btnAddAdmin").addEventListener("click", async () => {
+  const u = $("naUser").value.trim().toLowerCase(), p = $("naPass").value;
+  if (!/^[a-z0-9._-]{3,32}$/.test(u)) return toast(LOI.bad_username);
+  if (p.length < 10) return toast("Mật khẩu phải từ 10 ký tự");
+  try { await api("add_admin", { username: u, password: p }); $("naUser").value = ""; $("naPass").value = ""; toast("Đã thêm admin " + u); loadSettings(); }
+  catch (e) { toast(e.message); }
+});
+$("btnLogout").addEventListener("click", async () => {
+  if (await dialog({ title: "Đăng xuất?", msg: "Lần sau cần nhập lại tên và mật khẩu.", okText: "Đăng xuất", danger: true }) !== null) logout(false);
+});
+
+// ===================== KHOI DONG =====================
+(async () => {
+  if (!TOKEN) return showAuth();
+  try { const d = await api("whoami"); store.set("hf_adm_user", d.username || store.get("hf_adm_user")); showMain(); }
+  catch (e) { /* api() da tu chuyen ve dang nhap neu token het han */ if (TOKEN) showAuth(); }
+})();
 </script>
 </body>
 </html>
