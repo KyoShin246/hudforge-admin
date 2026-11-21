@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex, nofollow, noarchive">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <title>HUD FORGE Quản lý</title>
@@ -160,6 +159,28 @@
       <div class="card" id="giftList"><div class="empty">—</div></div>
     </div>
 
+    <!-- Tab YEU CAU (khach xin lam ban theme cho man con thieu, app 1.1.6+) -->
+    <div id="tYeuCau" hidden>
+      <div class="sect">Khách xin làm bản theme cho màn của họ</div>
+      <p class="small mut">Dòng có mã theme "man-moi" = khách có màn shop CHƯA có theme nào (vd Thermalright 480x480).</p>
+      <p class="small mut">Gộp theo theme + loại màn, nhiều khách xin nhất ở trên. Làm xong bấm "Đã làm" để ẩn khỏi danh sách mới.</p>
+      <div class="card" id="ycList"><div class="empty">—</div></div>
+    </div>
+
+    <!-- Tab MAN 12H (app 1.1.14+: man chua co theme, cam ket 12 tieng, tang 10 luot) -->
+    <div id="tMan" hidden>
+      <div class="sect">Màn chưa có theme · cam kết 12 tiếng</div>
+      <p class="small mut">Khách mở app thấy màn chưa có theme và bấm gửi. Làm xong theme cho màn đó thì bấm "Đã có theme": máy khách được cộng 10 lượt miễn phí ngay (máy chưa có tài khoản thì nhận khi tạo tài khoản và mở app). Quá 12 tiếng app khách cũng tự nhận 10 lượt. Mỗi máy chỉ nhận quà 1 lần. Gửi rác bấm "Spam" (không tặng).</p>
+      <div class="card" id="manList"><div class="empty">—</div></div>
+    </div>
+
+    <!-- Tab BAO CAO MAY (khach bam "Kiem tra man cua toi" > "Gui cho shop", app 1.1.9+) -->
+    <div id="tBaoCao" hidden>
+      <div class="sect">Báo cáo máy khách gửi</div>
+      <p class="small mut">Kết quả quét màn đã ẩn tên người dùng / tên máy. Bấm "Chi tiết" để xem toàn bộ, "Ảnh" để mở ảnh khách đính.</p>
+      <div class="card" id="bcList"><div class="empty">—</div></div>
+    </div>
+
     <!-- Tab CAI DAT -->
     <div id="tCai" hidden>
       <div class="card">
@@ -197,6 +218,9 @@
   <button data-tab="tDon" class="on">Đơn chờ<span class="cnt" id="cntDon" hidden></span></button>
   <button data-tab="tKhach">Khách hàng</button>
   <button data-tab="tQua">Mã quà</button>
+  <button data-tab="tYeuCau">Yêu cầu<span class="cnt" id="cntYc" hidden></span></button>
+  <button data-tab="tMan">Màn 12h<span class="cnt" id="cntMan" hidden></span></button>
+  <button data-tab="tBaoCao">Báo cáo<span class="cnt" id="cntBc" hidden></span></button>
   <button data-tab="tCai">Cài đặt</button>
 </nav>
 
@@ -369,12 +393,15 @@ function showMain(){
   openTab("tDon");
 }
 function openTab(id){
-  for (const t of ["tDon","tKhach","tQua","tCai"]) $(t).hidden = (t !== id);
+  for (const t of ["tDon","tKhach","tQua","tYeuCau","tMan","tBaoCao","tCai"]) $(t).hidden = (t !== id);
   for (const b of document.querySelectorAll(".tabs button")) b.classList.toggle("on", b.dataset.tab === id);
   window.scrollTo(0, 0);
   if (id === "tDon") loadOrders();
   if (id === "tKhach") loadLics();
   if (id === "tQua") loadGifts();
+  if (id === "tYeuCau") loadYeuCau();
+  if (id === "tMan") loadMan();
+  if (id === "tBaoCao") loadBaoCao();
   if (id === "tCai") loadSettings();
 }
 $("tabs").addEventListener("click", (e) => { const b = e.target.closest("button[data-tab]"); if (b) openTab(b.dataset.tab); });
@@ -510,6 +537,115 @@ $("btnAddKey").addEventListener("click", async () => {
   try { const d = await api("add_license", { key: $("nkKey").value.trim().toUpperCase(), contact: $("nkContact").value.trim() });
     toast("Đã thêm mã " + d.key); $("nkKey").value = ""; $("nkContact").value = ""; loadLics(); }
   catch (e) { toast(e.message); } finally { busy(b, false); }
+});
+
+// ---- YEU CAU LAM BAN MAN ----
+const MAN_TEN = { "JL:916": "Jungle Leopard 9.16\"", "LC:88": "Lian Li 8.8\"", "LC:92": "Lian Li 9.2\"", "TRCC:916": "Thermalright 9.16\"", "TRCC:480480": "Thermalright Hyper Vision 480x480", "TURZX:4801920": "TURZX 8.8\"", "TURZX:800480": "TURZX 5\"" };
+async function loadYeuCau(){
+  try {
+    const d = await api("list_yeu_cau"); const rows = d.yeu_cau || [];
+    const g = {};
+    for (const r of rows) {
+      if (r.trang_thai !== "moi") continue;
+      const k = r.theme_id + "|" + r.man;
+      (g[k] = g[k] || { theme_id: r.theme_id, ten: r.ten_theme || r.theme_id, man: r.man, ids: [], khach: 0, lan: 0, moi: r.updated_at });
+      g[k].ids.push(r.id); g[k].khach++; g[k].lan += r.so_lan || 1; if (r.updated_at > g[k].moi) g[k].moi = r.updated_at;
+    }
+    const ds = Object.values(g).sort((a, b) => b.khach - a.khach || (b.moi > a.moi ? 1 : -1));
+    $("cntYc").hidden = !ds.length; $("cntYc").textContent = ds.length;
+    $("ycList").innerHTML = ds.length ? ds.map((x) =>
+      '<div class="hist"><div><b>' + esc(x.ten) + '</b><div class="small mut">' + esc(MAN_TEN[x.man] || x.man) + ' · ' + esc(x.theme_id) + '</div></div>'
+      + '<div style="text-align:right"><b>' + x.khach + ' khách</b><div class="small mut">' + x.lan + ' lần bấm</div>'
+      + '<button class="sm" data-yc="da_lam" data-ids="' + x.ids.join(",") + '" style="margin-top:4px">Đã làm</button> '
+      + '<button class="sm ghost" data-yc="bo_qua" data-ids="' + x.ids.join(",") + '" style="margin-top:4px">Bỏ qua</button></div></div>'
+    ).join("") : '<div class="empty">Chưa có yêu cầu mới.</div>';
+  } catch (e) { $("ycList").innerHTML = '<div class="empty bad">' + esc(e.message) + '</div>'; }
+}
+$("ycList").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-yc]"); if (!b) return;
+  busy(b, true);
+  try { for (const id of b.dataset.ids.split(",")) await api("set_yeu_cau", { id: Number(id), trang_thai: b.dataset.yc }); toast("Đã cập nhật"); loadYeuCau(); }
+  catch (er) { toast(er.message); } finally { busy(b, false); }
+});
+
+// ---- MAN 12H ----
+let MAN = [], MAN_LECH = 0, MAN_TIMER = null;
+const TT_MAN = { moi: "Mới", dang_lam: "Đang làm", xong: "Đã có theme", spam: "Spam" };
+function conLai(iso){ const s = Math.round((new Date(iso).getTime() - (Date.now() + MAN_LECH)) / 1000); if (s <= 0) return null; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; return h + ":" + String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0"); }
+function demNguoc(){
+  for (const el of document.querySelectorAll("[data-han]")) { const c = conLai(el.dataset.han); el.textContent = c ? "còn " + c : "QUÁ HẠN"; el.style.color = c ? (c.split(":")[0] < 2 ? "var(--warn, #e6a23c)" : "") : "var(--bad)"; }
+}
+async function loadMan(){
+  try {
+    const d = await api("list_yeu_cau_man"); MAN = d.yeu_cau_man || [];
+    if (d.bay_gio) MAN_LECH = new Date(d.bay_gio).getTime() - Date.now();
+    const cho = MAN.filter((x) => x.trang_thai === "moi" || x.trang_thai === "dang_lam").length;
+    $("cntMan").hidden = !cho; $("cntMan").textContent = cho;
+    $("manList").innerHTML = MAN.length ? MAN.map((x) => {
+      const mo = x.trang_thai === "moi" || x.trang_thai === "dang_lam";
+      const qua = x.da_tang_luc ? (x.so_luot_tang > 0 ? "Đã tặng " + x.so_luot_tang + " lượt → " + esc(x.tang_cho_key || "") : "Máy đã nhận quà trước đó (0 lượt)") : (x.trang_thai === "spam" ? "Không tặng" : "Chưa tặng");
+      return '<div class="hist" style="align-items:flex-start"><div style="min-width:0"><b>#' + x.id + ' · ' + esc(x.ten_man || x.khoa_man) + '</b>'
+        + '<div class="small mut">' + esc(x.khoa_man) + ' · ' + esc(new Date(x.created_at).toLocaleString("vi-VN")) + ' · ' + esc(TT_MAN[x.trang_thai] || x.trang_thai) + '</div>'
+        + '<div class="small mut" style="word-break:break-all">Máy ' + esc(x.ma_may) + (x.license_key ? ' · ' + esc(x.license_key) : ' · chưa có tài khoản') + '</div>'
+        + (x.lien_he ? '<div class="small">Liên hệ: <b>' + esc(x.lien_he) + '</b></div>' : '')
+        + '<div class="small">' + qua + '</div>'
+        + '<pre class="small" data-mct="' + x.id + '" hidden style="white-space:pre-wrap;max-height:360px;overflow:auto"></pre></div>'
+        + '<div style="text-align:right;white-space:nowrap">' + (mo && !x.da_tang_luc ? '<b data-han="' + esc(x.han_chot) + '"></b><br>' : '')
+        + '<button class="sm ghost" data-man="ct" data-id="' + x.id + '">Chi tiết</button><br>'
+        + (mo ? (x.trang_thai === "moi" ? '<button class="sm ghost" data-man="dang_lam" data-id="' + x.id + '" style="margin-top:4px">Đang làm</button><br>' : '')
+              + '<button class="sm" data-man="xong" data-id="' + x.id + '" style="margin-top:4px">Đã có theme</button><br>'
+              + '<button class="sm ghost" data-man="spam" data-id="' + x.id + '" style="margin-top:4px">Spam</button>' : '')
+        + '</div></div>';
+    }).join("") : '<div class="empty">Chưa có yêu cầu.</div>';
+    demNguoc(); if (!MAN_TIMER) MAN_TIMER = setInterval(() => { if (!$("tMan").hidden) demNguoc(); }, 1000);
+  } catch (e) { $("manList").innerHTML = '<div class="empty bad">' + esc(e.message) + '</div>'; }
+}
+$("manList").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-man]"); if (!b) return; const id = Number(b.dataset.id);
+  busy(b, true);
+  try {
+    if (b.dataset.man === "ct") {
+      const p = document.querySelector('[data-mct="' + id + '"]'); p.hidden = !p.hidden;
+      if (!p.hidden && !p.textContent) { const d = await api("get_yeu_cau_man", { id }); p.textContent = JSON.stringify(d.bao_cao, null, 2); }
+    } else {
+      if (b.dataset.man === "xong" && !(await dialog({ title: "Đã có theme cho màn này?", msg: "Máy khách sẽ được cộng 10 lượt miễn phí (nếu máy chưa nhận quà lần nào).", okText: "Xác nhận" }))) return;
+      const d = await api("set_yeu_cau_man", { id, trang_thai: b.dataset.man });
+      const t = (d.tang || [])[0]; toast(t ? (t.luot > 0 ? "Đã tặng " + t.luot + " lượt cho " + t.license_key : "Máy đã nhận quà trước đó") : (b.dataset.man === "xong" ? "Đã lưu. Máy chưa có tài khoản: tặng khi khách mở app." : "Đã cập nhật"));
+      loadMan();
+    }
+  } catch (er) { toast(er.message); } finally { busy(b, false); }
+});
+
+// ---- BAO CAO MAY ----let BC = [];
+async function loadBaoCao(){
+  try {
+    const d = await api("list_bao_cao"); BC = d.bao_cao || [];
+    const moi = BC.filter((x) => x.trang_thai === "moi").length; $("cntBc").hidden = !moi; $("cntBc").textContent = moi;
+    $("bcList").innerHTML = BC.length ? BC.map((x) => {
+      const b = x.bao_cao || {}; const nhan = (b.nhan_ra || []).join(", ") || "chưa nhận ra";
+      const usb = (b.usb || []).map((u) => u.vid_pid + " " + (u.mo_ta_bus || u.ten || "")).slice(0, 6).join(" · ");
+      return '<div class="hist" style="align-items:flex-start"><div style="min-width:0"><b>#' + x.id + ' · ' + esc(nhan) + '</b>'
+        + '<div class="small mut">' + esc(new Date(x.created_at).toLocaleString("vi-VN")) + ' · ' + esc(x.license_key) + ' · ' + esc(x.trang_thai) + '</div>'
+        + (x.ghi_chu ? '<div class="small">Ghi chú: ' + esc(x.ghi_chu) + '</div>' : '')
+        + '<div class="small mut" style="word-break:break-all">USB: ' + esc(usb) + '</div>'
+        + '<pre class="small" data-ct="' + x.id + '" hidden style="white-space:pre-wrap;max-height:320px;overflow:auto">' + esc(JSON.stringify(b, null, 2)) + '</pre>'
+        + '<div data-anh="' + x.id + '"></div></div>'
+        + '<div style="text-align:right;white-space:nowrap"><button class="sm ghost" data-bc="ct" data-id="' + x.id + '">Chi tiết</button> '
+        + '<button class="sm ghost" data-bc="anh" data-id="' + x.id + '">Ảnh</button><br>'
+        + '<button class="sm" data-bc="da_xu_ly" data-id="' + x.id + '" style="margin-top:4px">Đã xử lý</button></div></div>';
+    }).join("") : '<div class="empty">Chưa có báo cáo.</div>';
+  } catch (e) { $("bcList").innerHTML = '<div class="empty bad">' + esc(e.message) + '</div>'; }
+}
+$("bcList").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-bc]"); if (!b) return; const id = b.dataset.id;
+  if (b.dataset.bc === "ct") { const p = document.querySelector('[data-ct="' + id + '"]'); p.hidden = !p.hidden; if (!p.hidden) api("set_bao_cao", { id: Number(id), trang_thai: "da_xem" }).catch(() => {}); return; }
+  busy(b, true);
+  try {
+    if (b.dataset.bc === "anh") {
+      const d = await api("get_bao_cao", { id: Number(id) }); const box = document.querySelector('[data-anh="' + id + '"]');
+      box.innerHTML = (d.anh || []).length ? d.anh.map((a) => '<a download="' + esc(a.ten) + '" href="data:image/*;base64,' + a.b64 + '"><img alt="' + esc(a.ten) + '" style="max-width:100%;margin-top:6px;border-radius:8px" src="data:image/*;base64,' + a.b64 + '"></a>').join("") : '<div class="small mut">Không có ảnh.</div>';
+    } else { await api("set_bao_cao", { id: Number(id), trang_thai: b.dataset.bc }); toast("Đã cập nhật"); loadBaoCao(); }
+  } catch (er) { toast(er.message); } finally { busy(b, false); }
 });
 
 // ---- MA QUA ----
