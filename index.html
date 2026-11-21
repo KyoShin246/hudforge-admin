@@ -616,7 +616,8 @@ $("manList").addEventListener("click", async (e) => {
   } catch (er) { toast(er.message); } finally { busy(b, false); }
 });
 
-// ---- BAO CAO MAY ----let BC = [];
+// ---- BAO CAO MAY ----
+let BC = [];
 async function loadBaoCao(){
   try {
     const d = await api("list_bao_cao"); BC = d.bao_cao || [];
