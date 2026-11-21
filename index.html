@@ -260,6 +260,9 @@ const LOI = {
   bad_token: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
   need_login: "Vui lòng đăng nhập.",
   invalid_key: "Không tìm thấy mã khách này.",
+  no_file: "Theme này chưa có file cài (chỉ trưng bày) nên chưa tặng được.",
+  da_tang: "Tài khoản này đã được tặng theme đó rồi.",
+  khong_co: "Theme này không nằm trong danh sách đã tặng.",
   bad_key: "Mã khách không đúng định dạng.",
   bad_plan: "Hạng phải là luot, pro hoặc ultra.",
   bad_amount: "Số tiền không hợp lệ.",
@@ -465,6 +468,64 @@ async function loadHistory(){
   } catch (e) { $("histList").innerHTML = '<div class="empty bad">' + esc(e.message) + '</div>'; }
 }
 
+// ---- TẶNG THEME 1 BƯỚC (21/11/2026): chọn theme -> Tặng; danh sách đã tặng -> Thu lại. Không cần mã máy, không SQL tay. ----
+let THEME_OPT = null;
+async function layThemeOpt(){ if (!THEME_OPT) { const d = await api("theme_options"); THEME_OPT = d.themes || []; } return THEME_OPT; }
+function tenTheme(id){ const t = (THEME_OPT || []).find((x) => x.id === id); return t ? t.name : id; }
+async function moTangTheme(key){
+  const m = document.createElement("div"); m.className = "mask";
+  m.innerHTML = '<div class="dlg" role="dialog" aria-modal="true" style="max-height:88vh;overflow:auto">'
+    + '<h3>Tặng theme · ' + esc(key) + '</h3>'
+    + '<p class="small mut" style="margin:0 0 6px">Khách mở app (hoặc bấm Quét lại) là thấy nút cài miễn phí. Theme độc quyền: app bản mới hiện "♛ CÀI MIỄN PHÍ".</p>'
+    + '<input id="ttTim" placeholder="Gõ tên hoặc id theme…" autocomplete="off">'
+    + '<div id="ttDs" style="max-height:260px;overflow:auto;margin-top:8px"><div class="small mut">Đang tải danh sách theme…</div></div>'
+    + '<div class="sect" style="margin-top:12px">Đã tặng cho tài khoản này</div><div id="ttDaTang"><div class="small mut">…</div></div>'
+    + '<div class="row" style="margin-top:14px"><button class="ghost" data-x="dong">Đóng</button></div></div>';
+  document.body.appendChild(m);
+  const dong = () => { m.remove(); loadLics(); };
+  m.addEventListener("click", async (e) => {
+    if (e.target === m || e.target.closest("[data-x='dong']")) return dong();
+    const g = e.target.closest("[data-tang]"); const t = e.target.closest("[data-thu]");
+    if (!g && !t) return;
+    const btn = g || t; busy(btn, true);
+    try {
+      if (g) {
+        const id = g.dataset.tang; if (g.dataset.cofile !== "1") { toast(LOI.no_file); return; }
+        if (await dialog({ title: "Tặng '" + tenTheme(id) + "'?", msg: "Cho tài khoản " + key + ". Không trừ tiền, không trừ lượt.", okText: "Tặng" }) === null) return;
+        const d = await api("gift_theme", { key, theme_id: id });
+        toast(d.ket_qua === "da_so_huu" ? "Khách đã có theme này sẵn (đã ghi sổ tặng)" : "Đã tặng " + tenTheme(id));
+      } else {
+        const id = t.dataset.thu;
+        if (await dialog({ title: "Thu lại '" + tenTheme(id) + "'?", msg: "Chỉ gỡ phần đã tặng. Nếu khách đã tự mua theme này thì vẫn giữ.", okText: "Thu lại", danger: true }) === null) return;
+        const d = await api("revoke_theme", { key, theme_id: id });
+        toast(d.ket_qua === "giu_quyen" ? "Đã bỏ khỏi danh sách tặng (khách vẫn giữ vì đã tự mua / mở theo mã máy)" : "Đã thu lại");
+      }
+      await veDaTang();
+    } catch (er) { toast(er.message); } finally { busy(btn, false); }
+  });
+  async function veDaTang(){
+    try {
+      const d = await api("list_theme_tang", { key }); const rows = d.tang || [];
+      m.querySelector("#ttDaTang").innerHTML = rows.length ? rows.map((r) => '<div class="hist"><div><b>' + esc(tenTheme(r.theme_id)) + '</b><div class="small mut">'
+        + esc(r.theme_id) + ' · ' + esc(timeAgo(r.created_at)) + (r.admin ? ' · ' + esc(r.admin) : '') + (r.da_co_truoc ? ' · khách đã có sẵn' : '') + '</div></div>'
+        + '<button class="sm danger" data-thu="' + esc(r.theme_id) + '">Thu lại</button></div>').join("") : '<div class="small mut">Chưa tặng theme nào.</div>';
+    } catch (er) { m.querySelector("#ttDaTang").innerHTML = '<div class="small bad">' + esc(er.message) + '</div>'; }
+  }
+  function veDs(){
+    const q = m.querySelector("#ttTim").value.trim().toLowerCase();
+    let ds = (THEME_OPT || []).filter((t) => !q || t.id.includes(q) || String(t.name).toLowerCase().includes(q));
+    ds.sort((a, b) => ((b.doc_quyen ? 1 : 0) - (a.doc_quyen ? 1 : 0)) || String(a.name).localeCompare(String(b.name)));
+    const tong = ds.length; ds = ds.slice(0, 40);
+    m.querySelector("#ttDs").innerHTML = ds.length ? ds.map((t) => '<div class="hist"><div><b>' + (t.doc_quyen ? "♛ " : "") + esc(t.name) + '</b><div class="small mut">' + esc(t.id)
+      + (t.doc_quyen ? ' · độc quyền' : '') + (t.dac_biet ? ' · đặc biệt' : '') + (t.co_file ? '' : ' · <span class="bad">chưa có file cài</span>') + '</div></div>'
+      + '<button class="sm' + (t.co_file ? '' : ' ghost') + '" data-tang="' + esc(t.id) + '" data-cofile="' + (t.co_file ? 1 : 0) + '">Tặng</button></div>').join("")
+      + (tong > 40 ? '<div class="small mut">Hiện 40/' + tong + ' — gõ để lọc.</div>' : '') : '<div class="small mut">Không tìm thấy.</div>';
+  }
+  m.querySelector("#ttTim").addEventListener("input", veDs);
+  veDaTang();
+  try { await layThemeOpt(); veDs(); veDaTang(); } catch (er) { m.querySelector("#ttDs").innerHTML = '<div class="small bad">' + esc(er.message) + '</div>'; }
+}
+
 // ---- KHACH HANG ----
 async function loadLics(){
   try { const d = await api("list_licenses"); LICS = d.licenses || []; renderLics(); }
@@ -491,6 +552,7 @@ function renderLics(){
       + '<button class="sm" data-act="tien" data-k="' + k + '">Nạp / trừ tiền</button>'
       + '<button class="sm ghost" data-act="plan" data-k="' + k + '" data-v="' + esc(r.plan || "luot") + '">Đổi hạng</button>'
       + '<button class="sm ghost" data-act="ve" data-k="' + k + '">Vé đặc biệt</button>'
+      + '<button class="sm ghost" data-act="tangtheme" data-k="' + k + '">Tặng theme</button>'
       + '<button class="sm ghost" data-act="pw" data-k="' + k + '">Mật khẩu</button>'
       + (r.device_id ? '<button class="sm ghost" data-act="unbind" data-k="' + k + '">Gỡ máy</button>' : '')
       + '<button class="sm ' + (r.active ? "danger" : "ghost") + '" data-act="active" data-k="' + k + '" data-v="' + (r.active ? "0" : "1") + '">' + (r.active ? "Khoá mã" : "Mở khoá") + '</button>'
@@ -511,6 +573,8 @@ $("khachList").addEventListener("click", async (e) => {
       const v = await dialog({ title: "Vé đặc biệt · " + key, msg: "Nhập số vé cộng thêm (số âm để trừ).", input: true, inputType: "num", placeholder: "5", okText: "Lưu" });
       if (v === null || v === "") return; const delta = parseInt(v.replace(/[^\d-]/g, ""), 10); if (!delta) return;
       await api("add_ve", { key, delta }); toast("Đã cập nhật vé"); loadLics();
+    } else if (b.dataset.act === "tangtheme") {
+      moTangTheme(key);
     } else if (b.dataset.act === "plan") {
       const v = await dialog({ title: "Đổi hạng · " + key, msg: "Gõ một trong: luot (trả theo theme) · pro (thường miễn phí + vé đặc biệt) · ultra (mở tất cả)", input: true, placeholder: b.dataset.v, okText: "Lưu" });
       if (v === null || v === "") return; const plan = v.toLowerCase();
