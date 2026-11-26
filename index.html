@@ -170,7 +170,7 @@
     <!-- Tab MAN 12H (app 1.1.14+: man chua co theme, cam ket 12 tieng, tang 10 luot) -->
     <div id="tMan" hidden>
       <div class="sect">Màn chưa có theme · cam kết 12 tiếng</div>
-      <p class="small mut">Khách mở app thấy màn chưa có theme và bấm gửi. Làm xong theme cho màn đó thì bấm "Đã có theme": máy khách được cộng 10 lượt miễn phí ngay (máy chưa có tài khoản thì nhận khi tạo tài khoản và mở app). Quá 12 tiếng app khách cũng tự nhận 10 lượt. Mỗi máy chỉ nhận quà 1 lần. Gửi rác bấm "Spam" (không tặng).</p>
+      <p class="small mut">Khách mở app thấy màn chưa có theme và bấm gửi. Làm xong theme cho màn đó thì bấm "Đã có theme": máy khách được cộng 2 lượt miễn phí ngay (máy chưa có tài khoản thì nhận khi tạo tài khoản và mở app). Quá 12 tiếng app khách cũng tự nhận 2 lượt. Mỗi máy chỉ nhận quà 1 lần. Gửi rác bấm "Spam" (không tặng).</p>
       <div class="card" id="manList"><div class="empty">—</div></div>
     </div>
 
@@ -672,7 +672,7 @@ $("manList").addEventListener("click", async (e) => {
       const p = document.querySelector('[data-mct="' + id + '"]'); p.hidden = !p.hidden;
       if (!p.hidden && !p.textContent) { const d = await api("get_yeu_cau_man", { id }); p.textContent = JSON.stringify(d.bao_cao, null, 2); }
     } else {
-      if (b.dataset.man === "xong" && !(await dialog({ title: "Đã có theme cho màn này?", msg: "Máy khách sẽ được cộng 10 lượt miễn phí (nếu máy chưa nhận quà lần nào).", okText: "Xác nhận" }))) return;
+      if (b.dataset.man === "xong" && !(await dialog({ title: "Đã có theme cho màn này?", msg: "Máy khách sẽ được cộng 2 lượt miễn phí (nếu máy chưa nhận quà lần nào).", okText: "Xác nhận" }))) return;
       const d = await api("set_yeu_cau_man", { id, trang_thai: b.dataset.man });
       const t = (d.tang || [])[0]; toast(t ? (t.luot > 0 ? "Đã tặng " + t.luot + " lượt cho " + t.license_key : "Máy đã nhận quà trước đó") : (b.dataset.man === "xong" ? "Đã lưu. Máy chưa có tài khoản: tặng khi khách mở app." : "Đã cập nhật"));
       loadMan();
